@@ -12,8 +12,7 @@ rng = np.random.default_rng() #rng.normal(0, 1)
 
 # iterators
 class FibIter:
-    def __init__(self, limit=None):
-        #limit exists just for Compatibility
+    def __init__(self):
         self.a, self.b = 0, 1
 
     def __iter__(self):
@@ -24,13 +23,10 @@ class FibIter:
         self.a, self.b = self.b, self.a + self.b
         return result
 
-    def reset(self):
-        self.a, self.b = 0, 1
-
 class UniformRandomIter:
-    def __init__(self, rnge):
-        self.bottom = rnge[0]
-        self.top = rnge[1]
+    def __init__(self, bottom_range, top_range):
+        self.bottom = bottom_range
+        self.top = top_range
 
     def __iter__(self):
         return self
@@ -73,24 +69,19 @@ seeds = [[
         "transforms": [
             {
                 "function": translate,
-                "generators": [StableIter, StableIter, FibIter],
-                "parameters": [0, 0, None],
+                "parameters": [StableIter(0), StableIter(0), FibIter()],
             },
             {
                 "function": rotate,
-                "generators": [StableIter, StableIter, FibIter],
-                "parameters": [45, 45, None],
+                "parameters": [StableIter(45), StableIter(45), FibIter()],
             },
             {
                 "function": scale,
-                "generators": [UniformRandomIter, UniformRandomIter, UniformRandomIter],
-                "parameters": [[1, 5], [1, 5], [1, 5]],
+                "parameters": [UniformRandomIter(1, 5), UniformRandomIter(1, 5), UniformRandomIter(1, 5)],
             }
         ],
     }
 ]]
-
-f = FibIter()
 
 def render(structure):
     to_paste = f"$fn = {structure[0]['fn']};\n"
@@ -98,13 +89,10 @@ def render(structure):
     for shape in structure:
         for i in range(shape["number"]):
             for transform in shape["transforms"]:
-                to_paste += transform["function"](*[generator(parameter) for generator, parameter in zip(transform["generators"], transform["parameters"])]) + "\n"
-
-                for g in transform["generators"]:
-                    if g == FibIter:
-                        g = f
+                to_paste += transform["function"](*transform["parameters"]) + "\n"
+                #print(transform["function"](*transform["parameters"]))
             to_paste += shape["shape"]() + "\n"
-
+            #print(shape["shape"]())
 
     print(to_paste)
     pyperclip.copy(to_paste)
@@ -138,7 +126,7 @@ for s in seeds:
 for g in good:
     print(g)
     print()
-    new_seed = mutate(g.copy(), good, bad)
+    new_seed = mutate(g, good, bad)
     print(new_seed)
     render(new_seed)
     
