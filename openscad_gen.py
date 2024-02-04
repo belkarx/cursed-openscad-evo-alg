@@ -13,15 +13,18 @@ rng = np.random.default_rng() #rng.normal(0, 1)
 # iterators
 class FibIter:
     def __init__(self):
-        self.a, self.b = 0, 1
+        self.a, self.b = 0, .1
 
     def __iter__(self):
         return self
 
     def next(self):
         result = self.a
-        self.a, self.b = self.b, self.a + self.b
+        self.a, self.b = self.b, (self.a + self.b)
         return result
+
+    def reset(self):
+        self.a, self.b = 0, 1
 
 class UniformRandomIter:
     def __init__(self, bottom_range, top_range):
@@ -91,10 +94,15 @@ def render(structure):
             for transform in shape["transforms"]:
                 to_paste += transform["function"](*transform["parameters"]) + "\n"
                 #print(transform["function"](*transform["parameters"]))
+        
             to_paste += shape["shape"]() + "\n"
-            #print(shape["shape"]())
 
-    print(to_paste)
+        #make sure to reset fibonnaci iterator
+        for transform in shape["transforms"]:
+            for itr in transform["parameters"]:
+                if isinstance(itr, FibIter):
+                    itr.reset()
+    #print(to_paste)
     pyperclip.copy(to_paste)
     os.system("sh shopenscad.sh")
 
@@ -105,30 +113,61 @@ def render(structure):
 # change number
 # change shapev
 
-def mutate(structure, good, bad):
+def mutate(structure, good):
     print("mutating")
+
     for s in structure:
-        s['fn'] = abs(int(rng.normal(s['fn'], 50)))
+        #mutate fn
+        #s['fn'] = abs(int(rng.normal(s['fn'], 50)))
+
+        #mutate number
+        s['number'] = abs(int(rng.normal(s['number'], 5)))
+
+        #mutate transforms
+        for t in s['transforms']:
+            if random.random() < 0.2:
+                #mutate transform
+                for i in range(3):
+                    if random.random() < 0.07:
+                        t['function'] = random.choice([scale, translate, rotate])
+                    if random.random() < 0.3:
+                        t['parameters'][i] = random.choice([UniformRandomIter(0, 5), FibIter(), StableIter(rng.normal(0, 3))])
+
+        if random.random() < 0.05:
+                #remove a transform
+                s['transforms'].remove(t)
+
+        # mutate shape
+        if random.random() < 0.1:
+            s['shape'] = random.choice([sphere, cube])
+    
     return structure
 
 
 good = []
-bad = []
 
-for s in seeds:
-    render(s)
-    if input() != "":
-        good.append(s.copy())
-    print("DONE RENDERING")
-    #else:
-    #    bad.append(structure.copy())
+j = 0
 
-for g in good:
-    print(g)
-    print()
-    new_seed = mutate(g, good, bad)
-    print(new_seed)
-    render(new_seed)
-    
-    print()
-    print("----")
+while True:
+    print("ITERATION: ", j)
+    for s in seeds:
+        render(s)
+
+        i = input()
+        if i != "":
+            if i == "s":
+                print(good)
+            good.append(s.copy())
+            if len(good) > 5:
+                good.pop(0)
+        print("DONE RENDERING")
+
+    seeds = []
+
+    print("NUMBER OF SEEDS: ", len(good))
+    for g in good:
+        print(g)
+        print()
+        new_seed = mutate(g, good)
+        print(new_seed)
+        seeds.append(new_seed)
