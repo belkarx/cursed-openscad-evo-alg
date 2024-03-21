@@ -1,0 +1,41 @@
+def random_mutate(structure):
+    print("mutating")
+
+    for s in structure:
+        #mutate fn
+        #s['fn'] = abs(int(rng.normal(s['fn'], 50)))
+
+        #mutate number
+        print("number mutated from ", s['number'], end=" ")
+        s['number'] = abs(int(rng.normal(s['number'], 5)))
+        print("to ", s['number'])
+
+        # mutate shape
+        if random.random() < 0.1:
+            s['shape'] = random.choice([sphere, cube])
+            print("shape mutated")
+
+        # add transform
+        for t in s['transforms']:
+            #mutate transform
+            for i in range(3):
+                #change generator
+                if random.random() < 0.2:
+                    print("generator mutated from ", t['generators'][i], end=" ")
+                    t['generators'][i] = random.choice([UniformRandomIter, FibIter, StableIter])
+                    print("to ", t['generators'][i])
+
+                if t['generators'][i] == UniformRandomIter:
+                        t['parameters'][i] = sorted([abs(int(rng.normal(5, 1))) for _ in range(2)])
+                elif t['generators'][i] == FibIter:
+                        # scale by some random number
+                        t['parameters'][i] = abs(int(rng.normal(1, 5))*.1)
+                elif t['generators'][i] == StableIter:
+                        t['parameters'][i] = abs(int(rng.normal(2, 1)))
+
+            #make sure to clear iterators (not necessary bc render? no that does that after)
+            t['iterators'] = []
+
+        # do some limit checks on parameters?
+
+    return structure

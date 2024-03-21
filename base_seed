@@ -1,0 +1,47 @@
+seeds = [
+    [
+        {
+            "shape": sphere,
+            "number": 10,
+            "fn": 50,
+            "transforms": [
+                {
+                    "function": translate,
+                    "generators": [StableIter, StableIter, FibIter],
+                    "parameters": [0, 0, 1],
+                    "iterators": [],
+                },
+                {
+                    "function": rotate,
+                    "generators": [StableIter, StableIter, FibIter],
+                    "parameters": [45, 45, 1],
+                    "iterators": [],
+                },
+                {
+                    "function": scale,
+                    "generators": [
+                        UniformRandomIter,
+                        UniformRandomIter,
+                        UniformRandomIter,
+                    ],
+                    "parameters": [[1, 5], [1, 5], [1, 5]],
+                    "iterators": [],
+                },
+            ],
+        },
+        {
+            "shape": cube,
+            "number": 1,
+            "fn": 50,
+            "transforms": [
+                {
+                    "function": translate,
+                    "generators": [StableIter, StableIter, StableIter],
+                    "parameters": [0, 0, 0],
+                    "iterators": [],
+                },
+            ],
+        }
+
+    ]
+]
